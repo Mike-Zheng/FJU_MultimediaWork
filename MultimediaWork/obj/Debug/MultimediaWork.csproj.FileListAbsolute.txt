@@ -1,0 +1,10 @@
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\bin\Debug\MultimediaWork.exe.config
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\bin\Debug\MultimediaWork.exe
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\bin\Debug\MultimediaWork.pdb
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.csprojResolveAssemblyReference.cache
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.Properties.Resources.resources
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.csproj.GenerateResource.Cache
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.exe
+c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.pdb
+C:\Users\user\Documents\Visual Studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.Form2.resources
+C:\Users\user\Documents\Visual Studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.Form1.resources
