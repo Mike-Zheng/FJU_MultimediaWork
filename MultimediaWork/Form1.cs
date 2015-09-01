@@ -20,7 +20,9 @@ namespace MultimediaWork
         public int[,] bmarray = new int[65, 65];  //主畫格array
         public double[,] DCTarray = new double[65, 65];  //DCT畫格array
         public double[,] IDCTarray = new double[65, 65];  //IDCT畫格array
-        public string[,] Qtbarray = new string[65, 65];  //Qtable array
+        public int[,] Qtbarray = new int[65, 65];  //Qtable array
+        public int[,] DCQtbarray = new int[65, 65];  //DCT/Qtable array
+        public int[] Rle= new int[4225]; //其實是Zig zag scanner用
         int rawSize = 64;   //  限定 64x64
         Bitmap bm;  //畫布
         double pi = Math.PI;
@@ -28,6 +30,11 @@ namespace MultimediaWork
         public Form1()
         {
             InitializeComponent();
+            if (Directory.Exists(@"RawData\"))
+            {
+                labelLog.Text = "讀取RawData目錄成功";
+            }
+            else labelLog.Text = "RawData目錄不存在";
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -76,21 +83,66 @@ namespace MultimediaWork
         private void pic1_Paint()  //畫出PIC1(原始照片)
         {
             labelLog.Text = "";
-            bm = new Bitmap(rawSize * 2, rawSize * 2);
+            bm = new Bitmap(rawSize , rawSize);
             for (int i = 0; i < rawSize; i++)
             {
                 for (int j = 0; j < rawSize; j++)
                 {
+                    bm.SetPixel(j, i, Color.FromArgb(bmarray[i, j], bmarray[i, j], bmarray[i, j]));
                     //放大成兩倍1格變4格
-
+                    /*
                     bm.SetPixel(2 * j, 2 * i, Color.FromArgb(bmarray[i, j], bmarray[i, j], bmarray[i, j]));
                     bm.SetPixel(2 * j + 1, 2 * i + 1, Color.FromArgb(bmarray[i, j], bmarray[i, j], bmarray[i, j]));
                     bm.SetPixel(2 * j, 2 * i + 1, Color.FromArgb(bmarray[i, j], bmarray[i, j], bmarray[i, j]));
                     bm.SetPixel(2 * j + 1, 2 * i, Color.FromArgb(bmarray[i, j], bmarray[i, j], bmarray[i, j]));
+                     * */
                 }
             }
             picBox.Image = bm;
         }
+
+
+        private void pic2_Paint(double[,] arr)  //畫出DCT
+        {
+            Bitmap dctbm;
+            dctbm = new Bitmap(rawSize, rawSize);
+            for (int i = 0; i < rawSize; i++)
+            {
+                for (int j = 0; j < rawSize; j++)
+                {
+                   
+                    int pix = (int)arr[i, j]+128;
+                    if (pix > 255) pix = 255;
+                    if (pix < 0) pix = 0;
+                    dctbm.SetPixel(j, i, Color.FromArgb(pix, pix, pix));
+                 
+                }
+            }
+            dctbox.Image = dctbm;
+        }
+
+        private void pic3_Paint(double[,] arr)  //畫出IDCT
+        {
+            Bitmap idctbm;
+            idctbm = new Bitmap(rawSize, rawSize);
+            for (int i = 0; i < rawSize; i++)
+            {
+                for (int j = 0; j < rawSize; j++)
+                {
+                  
+                    int pix = (int)arr[i, j];
+                    if (pix > 255) pix = 255;
+                    if (pix < 0) pix = 0;
+                    idctbm.SetPixel(j, i, Color.FromArgb(pix, pix, pix));
+
+                }
+            }
+            idctbox.Image = idctbm;
+        }
+
+
+
+
 
    
 
@@ -377,7 +429,13 @@ namespace MultimediaWork
 
 
 
-        private void button2_Click(object sender, EventArgs e)
+
+
+
+
+
+        //DEBUG
+        private void button2_Click(object sender, EventArgs e) //開啟DEBUG
         {
             // button2.Enabled = false;
             //labelLog.Text = "HI! TEST";
@@ -395,10 +453,12 @@ namespace MultimediaWork
            
             // public int[,] DCTarray = new int[65, 65];  //主畫格array
            // double cosAngle = Math.Cos(pi);
-           
+            log.Text = "";
             Dct();
-            dct_Paint();
+            //dct_Paint();
+            pic2_Paint(DCTarray);
             IDCT.Enabled = true;
+            Qt.Enabled = true;
 
         }
 
@@ -465,22 +525,7 @@ namespace MultimediaWork
 
             return s;
         }
-        /*
-        double f_dct(int i, int j)
-        {
-            double f = 0 ;
-            for (int x = 0; x < 64; x++)
-            {
-                for (int y = 0; y < 64; y++)
-                {
-                    f = f + c_dct(x) * c_dct(y) * Math.Cos((2 * i + 1) * x * pi / 128) * Math.Cos((2 * j + 1) * y * pi / 128);
-                    //f = 1;
-                }
-            }
-            f = f * 2 / 64;
-            return f;
-        }
-        */
+      
 
         double c_dct(int nu)
         {
@@ -489,27 +534,6 @@ namespace MultimediaWork
             else c = 1;
         
         return c;
-        }
-
-        private void dct_Paint()  //畫出DCT
-        {
-            Bitmap dctbm;  
-            dctbm = new Bitmap(rawSize * 2, rawSize * 2);
-            for (int i = 0; i < rawSize; i++)
-            {
-                for (int j = 0; j < rawSize; j++)
-                {
-                    //放大成兩倍1格變4格
-                    int pix = (int)DCTarray[i, j] + 128;
-                    if (pix > 255) pix = 255;
-                    if (pix < 0) pix = 0;
-                    dctbm.SetPixel(2 * j, 2 * i, Color.FromArgb(pix,pix,pix));
-                    dctbm.SetPixel(2 * j + 1, 2 * i + 1, Color.FromArgb(pix, pix, pix));
-                    dctbm.SetPixel(2 * j, 2 * i + 1, Color.FromArgb(pix, pix, pix));
-                    dctbm.SetPixel(2 * j + 1, 2 * i, Color.FromArgb(pix, pix, pix));
-                }
-            }
-            dctbox.Image = dctbm;
         }
 
 
@@ -538,33 +562,18 @@ namespace MultimediaWork
 
         private void IDCT_Click(object sender, EventArgs e)
         {
+            log.Text = "";
             IDct();
-            idct_Paint();
+            //idct_Paint();
+            pic3_Paint(IDCTarray);
         }
 
-        private void idct_Paint()  //畫出IDCT
-        {
-            Bitmap idctbm;
-            idctbm = new Bitmap(rawSize * 2, rawSize * 2);
-            for (int i = 0; i < rawSize; i++)
-            {
-                for (int j = 0; j < rawSize; j++)
-                {
-                    //放大成兩倍1格變4格
-                    //IDCTarray[i, j] += 128;
-                    if (IDCTarray[i, j] > 255) IDCTarray[i, j] = 255;
-                    if (IDCTarray[i, j] < 0) IDCTarray[i, j] = 0;
-                    idctbm.SetPixel(2 * j, 2 * i, Color.FromArgb((int)IDCTarray[i, j], (int)IDCTarray[i, j], (int)IDCTarray[i, j]));
-                    idctbm.SetPixel(2 * j + 1, 2 * i + 1, Color.FromArgb((int)IDCTarray[i, j], (int)IDCTarray[i, j], (int)IDCTarray[i, j]));
-                    idctbm.SetPixel(2 * j, 2 * i + 1, Color.FromArgb((int)IDCTarray[i, j], (int)IDCTarray[i, j], (int)IDCTarray[i, j]));
-                    idctbm.SetPixel(2 * j + 1, 2 * i, Color.FromArgb((int)IDCTarray[i, j], (int)IDCTarray[i, j], (int)IDCTarray[i, j]));
-                }
-            }
-            idctbox.Image = idctbm;
-        }
+ 
 
         private void Qt_Click(object sender, EventArgs e)
         {
+
+            //讀取Qtable BEGIN
             int i;
             try
             {
@@ -578,21 +587,698 @@ namespace MultimediaWork
                     {
                         string[] values = line.Split(',');
                         for(int j=0;j<rawSize;j++)
-                           Qtbarray[i, j]=values[j];
+                            Qtbarray[i, j] = Convert.ToInt32(values[j]);
                            
                         }
                     i++;
                     }
                 }
-                
-                
             catch (FileNotFoundException ioEx)
             {
                 Console.WriteLine(ioEx.Message);
                 labelLog.Text = ioEx.Message;
 
             }
+            //讀取Qtable END
+
+            Qtable_Paint();
+            IQID.Enabled = true;
+            ZiZag.Enabled = true;
+
+
         }
+
+        private void Qtable_Paint()  //畫出Q table
+        {
+            Bitmap Qmap;
+            int Qtemp;
+            Qmap = new Bitmap(rawSize , rawSize );
+            for (int i = 0; i < rawSize; i++)
+            {
+                for (int j = 0; j < rawSize; j++)
+                {
+                    //放大成兩倍1格變4格
+                    //IDCTarray[i, j] += 128;
+                    //IDCTarray[i, j]=  (int)IDCTarray[i, j] / Convert.ToInt32(Qtbarray[i, j]);
+                   // DCTarray[i, j] = (int)DCTarray[i, j] /Qtbarray[i, j];
+                    DCQtbarray[i, j] = (int)DCTarray[i, j] / Convert.ToInt32(Qtbarray[i, j]);
+                    if (DCQtbarray[i, j] < 5 && DCQtbarray[i, j] > -5) DCQtbarray[i, j] = 0;
+                    Qtemp = DCQtbarray[i, j];
+                    if (Qtemp > 255) Qtemp = 255;
+                    if (Qtemp < 0) Qtemp = 0;
+                    Qmap.SetPixel(j,  i, Color.FromArgb(Qtemp, Qtemp, Qtemp));
+                    /*
+                    Qmap.SetPixel(2 * j, 2 * i, Color.FromArgb(Qtemp,Qtemp,Qtemp));
+                    Qmap.SetPixel(2 * j + 1, 2 * i + 1, Color.FromArgb(Qtemp, Qtemp, Qtemp));
+                    Qmap.SetPixel(2 * j, 2 * i + 1, Color.FromArgb(Qtemp,Qtemp,Qtemp));
+                    Qmap.SetPixel(2 * j + 1, 2 * i, Color.FromArgb(Qtemp,Qtemp,Qtemp));
+                     * */
+                }
+            }
+            dctbox.Image = Qmap;
+        }
+
+        private void IQID_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < rawSize; i++)
+            {
+                for (int j = 0; j < rawSize; j++)
+                {
+
+                    DCTarray[i, j] = DCQtbarray[i, j] * Convert.ToInt32(Qtbarray[i, j]);
+                }
+            }
+            IDct();
+            pic3_Paint(IDCTarray);
+            log.Text = "Quantization ：-5~+5 都變成0";
+        }
+
+
+        private void ZiZag_Click(object sender, EventArgs e)
+        {
+            // public int[] Rle= new int[4225]; 
+            int select = 0;
+            int i=0, j = 0;
+            log.Text = "請開啟Debug 裡的 RLE button";
+            Rle[0] = (int)DCQtbarray[i, j];
+
+
+            for (int r = 1; r < 4096; r++)
+            {
+
+
+                if (select == 0) 
+                {
+                 j++;
+                 Rle[r] = (int)DCQtbarray[i, j];
+                 select=1;
+                }
+                else if(select == 1)
+                {
+                    if (i == 63)
+                    {
+                        r--;
+                        select = 4;
+                    }
+                    else if (j > 0)
+                    {
+                        i++; j--;
+                        Rle[r] = (int)DCQtbarray[i, j];
+                    }
+                    else
+                    {
+                        r--;
+                        select = 2;
+                    }
+                }
+
+                else if(select == 2)
+                {
+                    i++;
+                    Rle[r] = (int)DCQtbarray[i, j];
+                    select = 3;
+                }
+                else if (select == 3)
+                {
+                     if (i > 0)
+                    {
+                        i--; j++;
+                        Rle[r] = (int)DCQtbarray[i, j];
+                    }
+                    else if(i==0)
+                    {
+                        select = 0;
+                        r--;
+                    }
+                    
+                }
+
+                else if (select ==4 )
+                {
+                    j++;
+                    Rle[r] = (int)DCQtbarray[i, j];
+                    select = 5;
+                }
+                else if (select ==5 )
+                {
+
+                     if (j == 63)
+                    {
+                        select = 6;
+                        r--;
+                    }
+                     else if (i > 0)
+                    {
+                        i--; j++;
+                        Rle[r] = (int)DCQtbarray[i, j];
+                    }
+                }
+                else if (select ==6 )
+                {
+                    i++;
+                    Rle[r] = (int)DCQtbarray[i, j];
+                    select = 7;
+                }
+                else if (select ==7 )
+                { 
+                    if (i ==63)
+                    {
+                        select = 4;
+                        r--;
+                    }
+                    else
+                    {
+                        i++; j--;
+                        Rle[r] = (int)DCQtbarray[i, j];
+                        
+                    }
+                }
+              
+            }
+
+            labelLog.Text = "";
+
+
+        }
+        //64x64 END
+
+
+
+
+        /// 8 *8 secter 切斷
+
+        public double[,] DCTarray8 = new double[65, 65];  //DCT8畫格array
+        public double[,] IDCTarray8 = new double[65, 65];  //DCT8畫格array
+        private void DCT8_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+            for(int j= 0; j<8;  j++)
+                Dct8(i, j);
+            } 
+
+           // dct_Paint8();
+            pic2_Paint(DCTarray8);
+            IDCT8.Enabled = true;
+            IDCT1.Enabled = true;
+            IDCT2.Enabled = true;
+            IDCT3.Enabled = true;
+            IDCT4.Enabled = true;
+            IDCT5.Enabled = true;
+        }
+
+
+
+        private void Dct8(int si,int sj)
+        {  
+            //  [0,0] [0,1]..
+            //  [1,0] [1,1]..
+            //  [2,0] [2,1]..
+            //  .............
+
+            int itemp = 0;
+            int jtemp = 0;
+
+            if (si == 0) itemp = 0;
+            else if (si == 1) itemp = 8;
+            else if (si == 2) itemp = 16;
+            else if (si == 3) itemp = 24;
+            else if (si == 4) itemp = 32;
+            else if (si == 5) itemp = 40;
+            else if (si == 6) itemp = 48;
+            else if (si == 7) itemp = 56;
+
+            if (sj == 0) jtemp = 0;
+            else if (sj == 1) jtemp = 8;
+            else if (sj == 2) jtemp = 16;
+            else if (sj == 3) jtemp = 24;
+            else if (sj == 4) jtemp = 32;
+            else if (sj == 5) jtemp = 40;
+            else if (sj == 6) jtemp = 48;
+            else if (sj == 7) jtemp = 56;
+
+
+
+
+            for (int i = itemp; i < itemp+8; i++)
+            {
+                for (int j = jtemp; j < jtemp+8; j++)
+                {
+                    DCTarray8[i, j] = (c_dct(i - itemp) * c_dct(j - jtemp) * SIGMA_DCT8(i - itemp, j - jtemp, itemp, jtemp)) / 4;
+                    //DCTarray[i, j] = SIGMA_DCT(i, j);
+
+                }
+            }
+
+
+        }
+
+        double SIGMA_DCT8(int u, int v, int itemp, int jtemp)
+        {
+            double s = 0;
+            for (int i = itemp; i < itemp+8; i++)
+            {
+                for (int j = jtemp; j < jtemp+8; j++)
+                {
+                    s = s + bmarray[i, j] * Math.Cos((2 * (i-itemp) + 1) * u * pi / 16) *( Math.Cos((2 * (j-jtemp) + 1) * v * pi / 16));
+
+                }
+            }
+
+            return s;
+        }
+
+
+
+
+        private void IDCT8_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                    IDct8(i, j);
+            } 
+           // idct_Paint8();
+            pic3_Paint(IDCTarray8);
+        }
+
+        private void IDct8(int si, int sj)
+        {
+            //  [0,0] [0,1]..
+            //  [1,0] [1,1]..
+            //  [2,0] [2,1]..
+            //  .............
+
+            int itemp = 0;
+            int jtemp = 0;
+
+            if (si == 0) itemp = 0;
+            else if (si == 1) itemp = 8;
+            else if (si == 2) itemp = 16;
+            else if (si == 3) itemp = 24;
+            else if (si == 4) itemp = 32;
+            else if (si == 5) itemp = 40;
+            else if (si == 6) itemp = 48;
+            else if (si == 7) itemp = 56;
+
+            if (sj == 0) jtemp = 0;
+            else if (sj == 1) jtemp = 8;
+            else if (sj == 2) jtemp = 16;
+            else if (sj == 3) jtemp = 24;
+            else if (sj == 4) jtemp = 32;
+            else if (sj == 5) jtemp = 40;
+            else if (sj == 6) jtemp = 48;
+            else if (sj == 7) jtemp = 56;
+
+            for (int i = itemp; i < itemp+8; i++)
+            {
+                for (int j = jtemp; j < jtemp+8; j++)
+                {
+                    IDCTarray8[i, j] = SIGMA_IDCT8(i - itemp, j-jtemp, itemp, jtemp) / 4;
+                    //DCTarray[i, j] = SIGMA_DCT(i, j);
+
+                }
+            }
+
+
+        }
+
+        double SIGMA_IDCT8(int i, int j, int itemp, int jtemp)
+        {
+            double s = 0;
+            for (int u = itemp; u < itemp+8; u++)
+            {
+                for (int v = jtemp; v < jtemp+8; v++)
+                {
+
+                    s = s + c_dct(u - itemp) * c_dct(v - jtemp) * DCTarray8[u, v] * Math.Cos((2 * i + 1) * (u - itemp) * pi / 16) * Math.Cos((2 * j + 1) * (v - jtemp) * pi / 16);
+
+                }
+            }
+
+            return s;
+        }
+
+       
+
+
+        /// <summary>
+        /// //////////////////////////////////
+        /// </summary>
+        /// <param name="arr"></param>
+
+
+        public double[,] arrb = new double[65, 65];
+
+        private void IDct88(double[,] arr,int si, int sj)
+        {
+            //  [0,0] [0,1]..
+            //  [1,0] [1,1]..
+            //  [2,0] [2,1]..
+            //  .............
+            //int[,] arr = new int[65, 65];
+           
+
+            int itemp = 0;
+            int jtemp = 0;
+
+            if (si == 0) itemp = 0;
+            else if (si == 1) itemp = 8;
+            else if (si == 2) itemp = 16;
+            else if (si == 3) itemp = 24;
+            else if (si == 4) itemp = 32;
+            else if (si == 5) itemp = 40;
+            else if (si == 6) itemp = 48;
+            else if (si == 7) itemp = 56;
+
+            if (sj == 0) jtemp = 0;
+            else if (sj == 1) jtemp = 8;
+            else if (sj == 2) jtemp = 16;
+            else if (sj == 3) jtemp = 24;
+            else if (sj == 4) jtemp = 32;
+            else if (sj == 5) jtemp = 40;
+            else if (sj == 6) jtemp = 48;
+            else if (sj == 7) jtemp = 56;
+
+            for (int i = itemp; i < itemp + 8; i++)
+            {
+                for (int j = jtemp; j < jtemp + 8; j++)
+                {
+                    arrb[i, j] = SIGMA_IDCT88(arr ,i - itemp, j - jtemp, itemp, jtemp) / 4;
+                    //DCTarray[i, j] = SIGMA_DCT(i, j);
+
+                }
+            }
+
+            
+        }
+
+        double SIGMA_IDCT88(double [,]arr,int i, int j, int itemp, int jtemp)
+        {
+            double s = 0;
+            for (int u = itemp; u < itemp + 8; u++)
+            {
+                for (int v = jtemp; v < jtemp + 8; v++)
+                {
+
+                    s = s + c_dct(u - itemp) * c_dct(v - jtemp) * arr[u, v] * Math.Cos((2 * i + 1) * (u - itemp) * pi / 16) * Math.Cos((2 * j + 1) * (v - jtemp) * pi / 16);
+
+                }
+            }
+
+            return s;
+        }
+
+       
+        private void IDCT1_Click(object sender, EventArgs e)
+        {
+            double[,] arr = new double[65, 65];
+
+            for (int i=0;i<64;i++) 
+              for(int j=0;j<64;j++)
+                 arr[i,j]=DCTarray8[i, j];
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    arr=dec(arr, 1, i, j);
+
+            Paintre8(arr);
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                     IDct88(arr, i, j);
+
+
+            Paint8(arrb);
+
+
+        }
+
+
+
+
+        private double[,] dec(double[,] arr, int type, int si, int sj)
+        {
+           
+            //  [0,0] [0,1]..
+            //  [1,0] [1,1]..
+            //  [2,0] [2,1]..
+            //  .............
+
+            int itemp = 0;
+            int jtemp = 0;
+
+            if (si == 0) itemp = 0;
+            else if (si == 1) itemp = 8;
+            else if (si == 2) itemp = 16;
+            else if (si == 3) itemp = 24;
+            else if (si == 4) itemp = 32;
+            else if (si == 5) itemp = 40;
+            else if (si == 6) itemp = 48;
+            else if (si == 7) itemp = 56;
+
+            if (sj == 0) jtemp = 0;
+            else if (sj == 1) jtemp = 8;
+            else if (sj == 2) jtemp = 16;
+            else if (sj == 3) jtemp = 24;
+            else if (sj == 4) jtemp = 32;
+            else if (sj == 5) jtemp = 40;
+            else if (sj == 6) jtemp = 48;
+            else if (sj == 7) jtemp = 56;
+
+            double co00 = arr[itemp, jtemp];
+            double co01 = arr[itemp, jtemp + 1];
+            double co10 = arr[itemp + 1, jtemp];
+            double co02 = arr[itemp, jtemp + 2];
+            double co11 = arr[itemp + 1, jtemp + 1];
+            double co20 = arr[itemp + 2, jtemp];
+
+
+            for (int i = itemp; i < itemp + 8; i++)
+            {
+                for (int j = jtemp; j < jtemp + 8; j++)
+                {
+                     arr[i, j] = 0;
+
+                }
+            }
+
+            if (type == 1)
+            {
+                arr[itemp, jtemp] = co00;
+            
+            }
+            else if (type == 2)
+            {
+                arr[itemp, jtemp] = co00;
+                arr[itemp, jtemp+1] = co01;
+                arr[itemp+1, jtemp] = co10;
+            }
+            else if (type == 3)
+            {
+                arr[itemp, jtemp] = co00;
+                arr[itemp, jtemp + 1] = co01;
+                arr[itemp + 1, jtemp] = co10;
+                arr[itemp, jtemp+2] = co02;
+                arr[itemp+1, jtemp + 1] = co11;
+                arr[itemp + 2, jtemp] = co20;
+            }
+            else if (type == 4)
+            {
+                arr[itemp, jtemp] = co00;
+                arr[itemp, jtemp+1] = co01;
+                arr[itemp, jtemp+2] = co02;
+            }
+            else if (type == 5)
+            {
+                arr[itemp, jtemp] = co00;
+                arr[itemp+1, jtemp] = co10;
+                arr[itemp+2, jtemp] = co20;
+            }
+
+
+
+
+            return arr;
+        }
+
+        private void IDCT2_Click(object sender, EventArgs e)
+        {
+            double[,] arr = new double[65, 65];
+
+            for (int i = 0; i < 64; i++)
+                for (int j = 0; j < 64; j++)
+                    arr[i, j] = DCTarray8[i, j];
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    arr = dec(arr, 2, i, j);
+
+            Paintre8(arr);
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    IDct88(arr, i, j);
+
+
+            Paint8(arrb);
+
+        }
+
+        private void IDCT3_Click(object sender, EventArgs e)
+        {
+            double [,] arr = new double[65, 65];
+
+            for (int i = 0; i < 64; i++)
+                for (int j = 0; j < 64; j++)
+                    arr[i, j] = DCTarray8[i, j];
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    arr = dec(arr, 3, i, j);
+
+            Paintre8(arr);
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    IDct88(arr, i, j);
+
+
+            Paint8(arrb);
+
+        }
+
+        private void IDCT4_Click(object sender, EventArgs e)
+        {
+            double[,] arr = new double[65, 65];
+
+            for (int i = 0; i < 64; i++)
+                for (int j = 0; j < 64; j++)
+                    arr[i, j] = DCTarray8[i, j];
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    arr = dec(arr, 4, i, j);
+
+            Paintre8(arr);
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    IDct88(arr, i, j);
+
+
+            Paint8(arrb);
+
+
+        }
+
+        private void IDCT5_Click(object sender, EventArgs e)
+        {
+            double[,] arr = new double[65, 65];
+
+            for (int i = 0; i < 64; i++)
+                for (int j = 0; j < 64; j++)
+                    arr[i, j] = DCTarray8[i, j];
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    arr = dec(arr, 5, i, j);
+
+            Paintre8(arr);
+
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    IDct88(arr, i, j);
+
+
+            Paint8(arrb);
+
+        }
+
+        private void Paintre8(double[,] arr) 
+        {
+            Bitmap dctbm;
+            dctbm = new Bitmap(rawSize, rawSize);
+            for (int i = 0; i < rawSize; i++)
+            {
+                for (int j = 0; j < rawSize; j++)
+                {
+                    //放大成兩倍1格變4格
+                    int pix = (int)arr[i, j];
+                    if (pix > 255) pix = 255;
+                    if (pix < 0) pix = 0;
+                    dctbm.SetPixel(j, i, Color.FromArgb(pix, pix, pix));
+                    /*
+                    dctbm.SetPixel(2 * j, 2 * i, Color.FromArgb(pix, pix, pix));
+                    dctbm.SetPixel(2 * j + 1, 2 * i + 1, Color.FromArgb(pix, pix, pix));
+                    dctbm.SetPixel(2 * j, 2 * i + 1, Color.FromArgb(pix, pix, pix));
+                    dctbm.SetPixel(2 * j + 1, 2 * i, Color.FromArgb(pix, pix, pix));
+                     */
+                }
+            }
+            dctbox.Image = dctbm;
+        }
+
+        private void Paint8(double[,] arr)  
+        {
+            Bitmap idctbm;
+            idctbm = new Bitmap(rawSize, rawSize);
+            for (int i = 0; i < rawSize; i++)
+            {
+                for (int j = 0; j < rawSize; j++)
+                {
+                    //放大成兩倍1格變4格
+                    int pix = (int)arr[i, j];
+                    if (pix > 255) pix = 255;
+                    if (pix < 0) pix = 0;
+                    idctbm.SetPixel(j, i, Color.FromArgb(pix, pix, pix));
+                    /*
+                    idctbm.SetPixel(2 * j, 2 * i, Color.FromArgb(pix, pix, pix));
+                    idctbm.SetPixel(2 * j + 1, 2 * i + 1, Color.FromArgb(pix, pix, pix));
+                    idctbm.SetPixel(2 * j, 2 * i + 1, Color.FromArgb(pix, pix, pix));
+                    idctbm.SetPixel(2 * j + 1, 2 * i, Color.FromArgb(pix, pix, pix));
+                     * */
+                }
+            }
+            idctbox.Image = idctbm;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// 
+
+
+        private void oplena_Click(object sender, EventArgs e)
+        {
+
+            // button2.Enabled = false;
+            //labelLog.Text = "HI! TEST";
+            Form1 f1 = this;
+            Form3 f3 = new Form3();
+           
+          
+            f3.f1 = this;
+            f3.Show();
+        }
+        
+
+
+
+
 
  
     }

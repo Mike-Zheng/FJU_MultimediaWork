@@ -8,3 +8,7 @@ c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWor
 c:\users\user\documents\visual studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.pdb
 C:\Users\user\Documents\Visual Studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.Form2.resources
 C:\Users\user\Documents\Visual Studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.Form1.resources
+C:\Users\user\Documents\Visual Studio 2013\Projects\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.Form3.resources
+D:\GitHub\MultimediaWork\MultimediaWork\bin\Debug\MultimediaWork.exe.config
+D:\GitHub\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.exe
+D:\GitHub\MultimediaWork\MultimediaWork\obj\Debug\MultimediaWork.pdb
